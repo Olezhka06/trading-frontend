@@ -440,7 +440,7 @@ class TradingChart {
     }
 
     connectWebSocket() {
-        const wsUrl = `ws://${window.location.host}/ws`;
+        const wsUrl = 'wss://trading-backend-s3cy.onrender.com/ws';
         console.log('Connecting to WebSocket:', wsUrl);
         
         this.ws = new WebSocket(wsUrl);
