@@ -486,6 +486,12 @@ class TradingChart {
 
     handleMessage(message) {
         switch (message.type) {
+            case 'initial_candles':
+                this.handleInitialCandles(message);
+                break;
+            case 'initial_zones':
+                this.handleInitialZones(message);
+                break;
             case 'candle':
                 this.handleCandle(message);
                 break;
@@ -514,6 +520,54 @@ class TradingChart {
                 this.handleTrimData(message);
                 break;
         }
+    }
+    
+    handleInitialCandles(message) {
+        console.log(`📊 Loading ${message.data.length} historical candles...`);
+        
+        // Load all candles at once
+        const candles = message.data.map(c => ({
+            time: c.time,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close
+        }));
+        
+        const volumes = message.data.map(c => ({
+            time: c.time,
+            value: c.volume,
+            color: c.close >= c.open ? '#26a69a80' : '#ef535080'
+        }));
+        
+        // Set data all at once (much faster than updating one by one)
+        this.candleSeries.setData(candles);
+        this.volumeSeries.setData(volumes);
+        
+        // Store in memory
+        this.candleData = candles;
+        this.volumeData = volumes;
+        
+        // Update time tracking
+        if (candles.length > 0) {
+            this.earliestTime = candles[0].time;
+            this.latestTime = candles[candles.length - 1].time;
+        }
+        
+        console.log(`✅ Loaded historical data: ${candles.length} candles from ${this.earliestTime} to ${this.latestTime}`);
+    }
+    
+    handleInitialZones(message) {
+        console.log(`🎯 Loading ${message.data.length} historical zones...`);
+        
+        for (const zoneData of message.data) {
+            this.zones.set(zoneData.id, zoneData);
+        }
+        
+        this.updateZones();
+        this.updateZonesSidebar();
+        
+        console.log(`✅ Loaded ${this.zones.size} zones`);
     }
 
     handleTradeLines(message) {
